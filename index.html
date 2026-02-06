@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Scraper</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input { width: 80%; padding: 12px; margin-bottom: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; }
+        button { padding: 12px 24px; font-size: 16px; background: #0070f3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>サイト情報取得ツール</h2>
+    <input type="url" id="targetUrl" placeholder="https://example.com" required>
+    <button type="button" onclick="runScraper()">情報を取得する</button>
+
+    <div id="result">ここに結果が表示されます</div>
+
+    <script>
+        async function runScraper() {
+            const url = document.getElementById('targetUrl').value;
+            const resDiv = document.getElementById('result');
+            resDiv.innerText = "取得中...";
+
+            try {
+                const response = await fetch('/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await response.json();
+                resDiv.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                resDiv.innerText = "エラーが発生しました: " + err;
+            }
+        }
+    </script>
+</body>
+</html>
