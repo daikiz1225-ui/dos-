@@ -1,0 +1,41 @@
+from http.server import BaseHTTPRequestHandler
+import json
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse, parse_qs
+
+class handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data)
+        url = data.get('url')
+
+        if not url:
+            self._send_response({"error": "URLが指定されていません"}, 400)
+            return
+
+        try:
+            # サイトへのアクセス
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            response = requests.get(url, headers=headers, timeout=10)
+            response.encoding = response.apparent_encoding
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # 取得したい情報の抽出（例：タイトルと最初のh1）
+            result = {
+                "title": soup.title.string if soup.title else "タイトルなし",
+                "h1": soup.h1.get_text() if soup.h1 else "h1なし",
+                "status": "success"
+            }
+            self._send_response(result, 200)
+
+        except Exception as e:
+            self._send_response({"error": str(e)}, 500)
+
+    def _send_response(self, data, status):
+        self.send_response(status)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode('utf-8'))
